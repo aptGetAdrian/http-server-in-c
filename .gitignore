@@ -1,0 +1,11 @@
+# Ignore VS Code settings
+.vscode/
+
+# Ignore core dump files (like vgcore.*)
+vgcore.*
+
+# Ignore compiled and temporary files
+*.class
+*.log
+*.tmp
+*.swp
