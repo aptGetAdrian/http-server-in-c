@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "vec.h"
+#include "libraries/vec.h"
 
 
 /*
