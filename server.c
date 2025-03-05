@@ -332,26 +332,26 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 
+	int clientFd;
 	while (1) {
-		
-		//accepting connections
-		int clientFd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+		clientFd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
 		if (clientFd == -1) {
 			continue;
 		}
 		printf("Client connected\n");
 
-		//THREAD IS CREATED//
+		// Allocate memory for clientFd to prevent overwriting
+		int* clientFdPtr = malloc(sizeof(int));
+		*clientFdPtr = clientFd;
 
+		// Create a thread for each connection
 		pthread_t clientThread;
-		handlerArg args;
-		args.clientFd = &clientFd;
-		args.status_codes = status_codes;
+		handlerArg* args = malloc(sizeof(handlerArg));
+		args->clientFd = clientFdPtr;  // Pass dynamically allocated copy
+		args->status_codes = status_codes;
 
-		pthread_create(&clientThread, NULL, clientHandling, (void*) &args);
-
-		pthread_join(clientThread, NULL);
-
+		pthread_create(&clientThread, NULL, clientHandling, (void*) args);
+		pthread_detach(clientThread);  // Detach to avoid memory leaks
 	}
 
 	//close the socket
