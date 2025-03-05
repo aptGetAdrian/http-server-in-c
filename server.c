@@ -227,7 +227,6 @@ void* clientHandling (void *arguments) {
 	//free(replyStatus);
 	//vector_free(vec);
 
-	//close(*args->clientFd);
 	close(clientFd);
 
 

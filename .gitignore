@@ -9,3 +9,5 @@ vgcore.*
 *.log
 *.tmp
 *.swp
+
+test
