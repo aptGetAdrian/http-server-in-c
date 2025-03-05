@@ -10,4 +10,5 @@ vgcore.*
 *.tmp
 *.swp
 
+# Ignore compiled C file
 test
