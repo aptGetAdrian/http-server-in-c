@@ -13,7 +13,7 @@
 
 /*
 TODO:
-na linei 69 zgledne, kot da on ne ve, ce je initialized al ne. ocitno se vrednosti ne prenesejo
+vrednosti v status code arrayi se ne prenesejo. ocitno je pointer issue. server posle 500 internal server error
 
 
 
@@ -28,7 +28,7 @@ typedef struct  {
 } requestElement;
 
 typedef struct {
-    char* status_codes[NUM_STATUS_CODES];
+    char** status_codes;
 	int* clientFd;
 } handlerArg;
 
@@ -82,7 +82,7 @@ char* bulildStatusCodeReply(int code, char* status_codes[NUM_STATUS_CODES]) {
 }
 
 void* clientHandling (void *arguments) {
-	char buffer[] = "";
+	char buffer[4096] = {0};
 	char buffer2[] = "";
 	int counter = 0;
 	requestElement requestLine[3];
@@ -92,11 +92,10 @@ void* clientHandling (void *arguments) {
 
 	handlerArg *args = arguments;
 	int clientFd = *args->clientFd;
-	char* status_codes[NUM_STATUS_CODES];
-	memcpy(status_codes, args->status_codes, NUM_STATUS_CODES);
+	char** status_codes = args->status_codes;
 
 	//recieve a buffer of 100 bytes
-	recv(clientFd, buffer, 2048, 0);
+	recv(clientFd, buffer, 4096, 0);
 
 
 	//copying buffer into buffer 2
@@ -137,7 +136,9 @@ void* clientHandling (void *arguments) {
 		
 		//printf("%s\n%s\n", key, value);
 
-		requestElement test = {key, value};
+		if (key && value) {
+			requestElement test = {key, value};
+		}
 		
 		
 		
@@ -156,11 +157,15 @@ void* clientHandling (void *arguments) {
 		if (strncmp(requestLine[1].value, "/echo/", 6) == 0) {
 			char *outString = requestLine[1].value + 6;
 
-			replyStatus = bulildStatusCodeReply(200, status_codes);
+			if (status_codes[200]) {
+				replyStatus = bulildStatusCodeReply(200, status_codes);
+			} else {
+				replyStatus = strdup("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+			}
 
 
 			reply = malloc(sizeof(char) * 1024);
-			sprintf(reply,"%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
+			snprintf(reply, 1024, "%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
 			
 
 			bytes_sent = send(clientFd, reply, strlen(reply), 0);
@@ -174,11 +179,15 @@ void* clientHandling (void *arguments) {
 				}
 			}
 			
-			replyStatus = bulildStatusCodeReply(200, status_codes);
+			if (status_codes[200]) {
+				replyStatus = bulildStatusCodeReply(200, status_codes);
+			} else {
+				replyStatus = strdup("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+			}
 
 
 			reply = malloc(sizeof(char) * 1024);
-			sprintf(reply,"%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
+			snprintf(reply, 1024, "%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
 			
 
 			bytes_sent = send(clientFd, reply, strlen(reply), 0);
@@ -193,7 +202,11 @@ void* clientHandling (void *arguments) {
 				replyStatus = bulildStatusCodeReply(404, status_codes);
 				bytes_sent = send(clientFd, replyStatus, strlen(replyStatus), 0);
 			} else {
-				replyStatus = bulildStatusCodeReply(200, status_codes);
+				if (status_codes[200]) {
+					replyStatus = bulildStatusCodeReply(200, status_codes);
+				} else {
+					replyStatus = strdup("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+				}
 				bytes_sent = send(clientFd, replyStatus, strlen(replyStatus), 0);
 				fclose(targetFile);
 			}
@@ -215,6 +228,7 @@ void* clientHandling (void *arguments) {
 	//vector_free(vec);
 
 	//close(*args->clientFd);
+	close(clientFd);
 
 
 	return NULL;
@@ -332,7 +346,7 @@ int main() {
 		pthread_t clientThread;
 		handlerArg args;
 		args.clientFd = &clientFd;
-		memcpy(args.status_codes, status_codes, NUM_STATUS_CODES);
+		args.status_codes = status_codes;
 
 		pthread_create(&clientThread, NULL, clientHandling, (void*) &args);
 
