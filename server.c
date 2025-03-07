@@ -81,9 +81,16 @@ char* bulildStatusCodeReply(int code, char* status_codes[NUM_STATUS_CODES]) {
 	return pchar;
 }
 
+long geFileSize(FILE* pointer) {
+	long size;
+	fseek(pointer, 0L, SEEK_END);
+	size = ftell(pointer);
+	fseek(pointer, 0L, SEEK_SET);
+	return size;
+}
+
 void* clientHandling (void *arguments) {
-	char buffer[4096] = {0};
-	char buffer2[] = "";
+	char buffer[16384] = {0};
 	int counter = 0;
 	requestElement requestLine[3];
 	requestElement* vec = vector_create(); 
@@ -94,8 +101,8 @@ void* clientHandling (void *arguments) {
 	int clientFd = *args->clientFd;
 	char** status_codes = args->status_codes;
 
-	//recieve a buffer of 100 bytes
-	recv(clientFd, buffer, 4096, 0);
+	//recieve a buffer of 4096 bytes
+	recv(clientFd, buffer, 16384, 0);
 
 
 	//copying buffer into buffer 2
@@ -134,14 +141,12 @@ void* clientHandling (void *arguments) {
 			key[strlen(key)-1] = '\0';
 		}
 		
-		//printf("%s\n%s\n", key, value);
+		
 
-		if (key && value) {
-			requestElement test = {key, value};
-		}
+		requestElement test = {key, value};
 		
-		
-		
+		vector_add(&vec, test);
+		//printf("%s: %s\n", vec[0].key, vec[0].value);
 		counter++;
 
 		token = strtok_r(NULL, "\r\n", &saveptr1);
@@ -151,7 +156,6 @@ void* clientHandling (void *arguments) {
 	//DONE PARSING THE HTTP REQUEST
 	//for now only the request line and the headers. will do the body later
 
-	
 	if (strcmp(requestLine[0].value, "GET") == 0 && strcmp(requestLine[1].value, "") != 0) {
 		int bytes_sent;
 		if (strncmp(requestLine[1].value, "/echo/", 6) == 0) {
@@ -185,29 +189,73 @@ void* clientHandling (void *arguments) {
 				replyStatus = strdup("HTTP/1.1 500 Internal Server Error\r\n\r\n");
 			}
 
-
+			
 			reply = malloc(sizeof(char) * 1024);
-			snprintf(reply, 1024, "%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
+			snprintf(reply, sizeof(reply), "%s%s%ld%s%s\n", replyStatus, "Content-Type: text/plain\r\nContent-Length: ", (strlen(outString) + 1), "\r\n\r\n", outString);
 			
 
 			bytes_sent = send(clientFd, reply, strlen(reply), 0);
 			free(reply);
 		} else {
-
+			if (requestLine[1].value[0] == '/') {
+				memmove(requestLine[1].value, requestLine[1].value+1, strlen(requestLine[1].value));
+			}
+				
 			FILE *targetFile;
 			targetFile = fopen(requestLine[1].value, "r");
+
+			/*
+			TODO:
+			add dynamic buffer length
+
+				!! FROM STACKOVERFLOW !!
+				// in reality you would probably stat the file
+				// to find it's size and then malloc the memory
+				// or you could read the file twice:
+				// - first time counting the bytes
+				// - second time reading the bytes
+						
+			*/
 			
 			if (targetFile == NULL) {
-				printf("File does not exist. Returning status 404:\n%s\n", strerror(errno));
+				printf("File does not exist. Returning status 404: %s\n", strerror(errno));
 				replyStatus = bulildStatusCodeReply(404, status_codes);
 				bytes_sent = send(clientFd, replyStatus, strlen(replyStatus), 0);
 			} else {
 				if (status_codes[200]) {
+					long fileSize = geFileSize(targetFile);
+					char *outString = malloc(fileSize + 1);
+  					memset (outString, 0, fileSize + 1);  
+					//if (!outString) {
+					//	printf("Memory allocation failed: %s \n", ssrerror(errno));
+					//}
+					char *current = outString;
+					int bytes, chunk=20;
+
+					while ((bytes = fread(current, sizeof(char), chunk, targetFile)) > 0) {
+						current += bytes;
+					}
+					
+					outString[strlen(outString) - 1] = '\0';
+					//printf("%s\n",outString);
+										
+					
 					replyStatus = bulildStatusCodeReply(200, status_codes);
+					reply = malloc(sizeof(char) * 16384);
+
+					snprintf(reply, sizeof(reply), "%s%s%ld%s%s\n", replyStatus, "Content-Type: application/octet-stream\r\nContent-Length: ", sizeof(outString), "\r\n\r\n", outString);
+					printf("%s\n", reply);
+
+					bytes_sent = send(clientFd, reply, strlen(reply), 0);
+					//*outString = '\0';
+					free(outString);
+					free(reply);
+
 				} else {
 					replyStatus = strdup("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+					bytes_sent = send(clientFd, replyStatus, strlen(replyStatus), 0);
 				}
-				bytes_sent = send(clientFd, replyStatus, strlen(replyStatus), 0);
+				
 				fclose(targetFile);
 			}
 		}

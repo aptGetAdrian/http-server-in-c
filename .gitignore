@@ -12,3 +12,6 @@ vgcore.*
 
 # Ignore compiled C file
 test
+
+# Ignore test html file
+test.html
