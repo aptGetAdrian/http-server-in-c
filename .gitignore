@@ -13,5 +13,11 @@ vgcore.*
 # Ignore compiled C file
 test
 
-# Ignore test html file
+# Ignore the generated files from post requests
+files/
+
+# Ignore test html/css/javascript webpage
+script.js
+styles.css
 test.html
+test-image.jpg
