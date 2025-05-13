@@ -24,15 +24,7 @@ pthread_mutex_lock(&status_mutex);
 pthread_mutex_unlock(&status_mutex);
 
 pthread_mutex_t status_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-AFTER: optimizations:
-use this chatgpt chat as refference: 
-https://chatgpt.com/c/67de05f2-7c08-8002-935d-37cf566f76fe
-
-
-use the thread pool file to implement a thread pool for better safety and easier use.
-
-namesto vectora probej array stringov. sigurno se da
+http://localhost:4221/test.html. sigurno se da
 https://stackoverflow.com/questions/1088622/how-do-i-create-an-array-of-strings-in-c
 
 https://www.geeksforgeeks.org/array-of-strings-in-c/
@@ -59,7 +51,8 @@ pthread_mutex_unlock(&status_mutex);
 
 
 
-
+make log fucntion, that logs every request and response.<
+on first request, check what is missing
 
 
 */

@@ -9,9 +9,11 @@ vgcore.*
 *.log
 *.tmp
 *.swp
+*.o
 
 # Ignore compiled C file
 test
+main
 
 # Ignore the generated files from post requests
 files/
