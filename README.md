@@ -58,11 +58,11 @@ I recommend using the GCC compiler, as that's the one I use and know for sure th
    ```
 
 ## Usage
-1. Run the server
-   ```
-   ./server
-   ```
-2. The server will listen on port 4221 by default
+Run the server
+```
+./server
+```
+The server will listen on port 4221 by default
 
 ### Example requests
 
