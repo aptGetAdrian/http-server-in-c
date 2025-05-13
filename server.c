@@ -13,34 +13,10 @@
 
 /*
 TODO:
+thread pool
+compression 
 
 
-1. create functionaly for reading the request body.
-2. finish the codecrafters course.
-
-// Inside the thread:
-pthread_mutex_lock(&status_mutex);
-// Modify status_codes safely
-pthread_mutex_unlock(&status_mutex);
-
-pthread_mutex_t status_mutex = PTHREAD_MUTEX_INITIALIZER;
-http://localhost:4221/test.html. sigurno se da
-https://stackoverflow.com/questions/1088622/how-do-i-create-an-array-of-strings-in-c
-
-https://www.geeksforgeeks.org/array-of-strings-in-c/
-
-
-
-naredi thread pool 
-
-2️⃣ Race Condition on status_codes
-args->status_codes = status_codes; suggests that status_codes is shared across multiple threads.
-If multiple threads modify it without synchronization (e.g., mutex), you may have race conditions.
-✅ Fix: If status_codes is read-only, it’s safe. If it’s modified, use a mutex:
-
-c
-Copy
-Edit
 pthread_mutex_t status_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Inside the thread:
@@ -48,11 +24,6 @@ pthread_mutex_lock(&status_mutex);
 // Modify status_codes safely
 pthread_mutex_unlock(&status_mutex);
 
-
-
-
-make log fucntion, that logs every request and response.<
-on first request, check what is missing
 
 
 */

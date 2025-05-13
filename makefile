@@ -1,5 +1,5 @@
 main: vec.o server.o
-	gcc -g server.o vec.o -o main
+	gcc -g server.o vec.o -o main -lpthread
 
 
 vec.o: libraries/vec.c

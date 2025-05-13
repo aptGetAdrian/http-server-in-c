@@ -14,6 +14,7 @@ vgcore.*
 # Ignore compiled C file
 test
 main
+server
 
 # Ignore the generated files from post requests
 files/
