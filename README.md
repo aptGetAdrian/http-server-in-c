@@ -94,4 +94,4 @@ The following features are planned for future implementation:
 - Thread pool for better resource management
 - HTTP response compression
 - Improved error handling
-- Configuration file support
+- Switch to a Hashmap as the data structure for storing the request parameters 
